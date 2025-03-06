@@ -13,9 +13,6 @@ const receptionistSchema = new mongoose.Schema({
         yearsOfExperience: {
             type: String
         },
-        department: {
-            type: String
-        },
         workSchedule: {
             type: String
         }

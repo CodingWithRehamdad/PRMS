@@ -23,7 +23,7 @@ const patientSchema = new mongoose.Schema({
             type: String
         }
     },
-    medications: {
+    medications: [{
         name: {
             type: String
         },
@@ -42,7 +42,7 @@ const patientSchema = new mongoose.Schema({
         notes: {
             type: String
         }
-    },
+    }],
     insurance: {
         provider: {
             type: String
@@ -62,8 +62,6 @@ const patientSchema = new mongoose.Schema({
         }
         ]
     },
-
-
 
 }, { timestamps: true })
 

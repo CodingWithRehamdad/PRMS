@@ -1,28 +1,34 @@
 const Appointment = require('../models/appointmentModel')
+const Patient = require('../models/patientModel')
 const User = require('../models/userModel')
 
-const createAppointment = async(req, res) =>{
-    const { patientId, doctorId, date, reason, notes } = req.body
+const createAppointment = async (req, res) => {
     try {
-        const findPatient = await User.findById(patientId)
-        const findDoctor = await User.findById(doctorId)
-        const appointment = new Appointment({patient: findPatient._id, doctor: findDoctor._id, date, reason, notes})
-        await appointment.save()
+        const { patient, doctor, date, reason, notes, startTime, endTime } = req.body;
+        const user = await User.findOne({ _id: patient, role: "patient" })
 
-        res.status(201).json({message: "Appointment Created", appointment})
+        if (!user) {
+            return res.status(404).json({ message: "Patient not found" });
+        }
+
+        const appointment = await Appointment.create({patient: user._id, doctor, date, startTime, endTime, reason, notes });
+
+        return res.status(201).json({ message: "Appointment created successfully", appointment });
     } catch (error) {
-        res.status(500).json({message: "Server error", error: error.message})
+        return res.status(500).json({ message: "Internal server error", error: error.message });
     }
-}
+};
 
-const getAppointments = async(req, res) =>{
+const getAppointments = async (req, res) => {
     try {
         const appointments = await Appointment.find()
-        res.status(200).json(appointments)
+            .populate("patient", "username email phone age gender"); // Fetch patient details
+
+        res.status(200).json(appointments);
     } catch (error) {
-        res.status(500).json({message: "Server error", error: error.message})
+        res.status(500).json({ message: "Server error", error: error.message });
     }
-}
+};
 
 const getAppointmentById = async(req, res) =>{
     const { id } = req.params

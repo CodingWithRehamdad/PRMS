@@ -17,10 +17,12 @@ const userSchema = new mongoose.Schema({
         required: true
     },
     emergencyContact: {
-        type: String
+        type: String,
+        default: ""
     },
     address: {
-        type: String
+        type: String,
+        default: ""
     },
     gender: {
         type: String,
@@ -28,7 +30,8 @@ const userSchema = new mongoose.Schema({
         required: true
     },
     age: {
-        type: String
+        type: Number,
+        required: true
     },
     role: {
         type: String,
@@ -39,9 +42,8 @@ const userSchema = new mongoose.Schema({
         type: String,
         minlength: 6,
         required: true
-    },
-
-}, { timestamp: true })
+    }
+}, { timestamps: true });
 
 userSchema.pre('save', async function (next) {
     if (!this.isModified('password')) {

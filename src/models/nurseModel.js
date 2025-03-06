@@ -7,30 +7,36 @@ const nurseSchema = new mongoose.Schema({
         required: true
     },
     nurseDetails: {
-        qualifications: 
-        {
-            type: String
+        qualifications: {
+            type: String,
+            default: ""
         },
         specialization: {
-            type: String
+            type: String,
+            default: ""
         },
         licenseNumber: {
-            type: String
+            type: String,
+            default: ""
         },
         yearsOfExperience: {
-            type: String
+            type: Number,
+            default: 0
+        },
+        department: {
+            type: String,
+            default: ""
         },
         assignedDoctor: {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: 'Doctor'
+            type: String,
+            default: ""
         },
         workSchedule: {
-            type: String
-        },
+            type: String,
+            default: ""
+        }
     }
-    
-
-}, {timestamps: true})
+}, { timestamps: true });
 
 const Nurse = mongoose.model('Nurse', nurseSchema)
 

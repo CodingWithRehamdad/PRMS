@@ -2,42 +2,45 @@ const Patient = require('../models/patientModel')
 const User = require('../models/userModel')
 const generateToken = require('../utils/generateToken')
 
-const registerPatient = async (req, res) =>{
-    const { username, email, phone, address, gender, password, role, medicalHistory, medications, insurance, reports, emergencyContact } = req.body
+const registerPatient = async (req, res) => {
     try {
-        const patient = new User({username, email, phone, address, gender, password, role, medicalHistory, medications, insurance, reports, emergencyContact})
-        const existPatient = await User.findOne({email})
-        if (existPatient) {
-            return res.status(400).json({message: "Patient already found"})
-        }
-        await patient.save()
+        const { username, email, phone, address, gender, age, password, emergencyContact, medicalHistory, medications, insurance, reports } = req.body;
 
-        const patientDetails = new Patient({
-            userId: patient._id,
-            medicalHistory: medicalHistory || {},
-            medications: medications || {},
-            insurance: insurance || {},
-        })
-        await patientDetails.save()
+        if (await User.exists({ email })) 
+            return res.status(400).json({ message: "Patient already exists" });
 
-        patient.patient= patientDetails._id
-        await patient.save()
+        const patient = await new User({ username, email, phone, address, age, gender, password, role: "patient", emergencyContact }).save();
+        const patientDetails = await new Patient({ userId: patient._id, medicalHistory, medications, insurance, reports }).save();
 
-        const token = generateToken(patient)
-        res.status(201).json({message: "Patient created successfully", patient, token})
+        res.status(201).json({ message: "Patient registered successfully", patient, token: generateToken(patient) });
+
     } catch (error) {
-        res.status(500).json({message: "Server error", error: error.message})
-    }
-}
-
-const getPatients = async(req, res) => {
-    try {
-        const patients = await User.find({role: "patient"}).populate("username email phone role")
-        res.status(200).json(patients)
-    } catch (error) {
-        res.status(500).json({message: "Server error", error: error.message})
+        console.error("Error registering patient:", error);
+        res.status(500).json({ message: "Server error", error: error.message });
     }
 };
+
+
+const getPatients = async (req, res) => {
+    try {
+        const patients = await Patient.find().populate("userId", "username email phone age gender createdAt");
+
+        if (!patients.length) 
+            return res.status(404).json({ message: "No patients found" });
+
+        res.status(200).json(patients.map(({ _id, userId }) => ({
+            _id, username: userId?.username || "N/A", email: userId?.email || "N/A",
+            phone: userId?.phone || "N/A", age: userId?.age || "N/A",
+            gender: userId?.gender || "N/A",
+            createdAt: userId?.createdAt ? new Date(userId.createdAt).toISOString() : "N/A"
+        })));
+
+    } catch (error) {
+        console.error("Error fetching patients:", error);
+        res.status(500).json({ message: "Server error", error: error.message });
+    }
+};
+
 
 const getPatientById = async(req, res) => {
     const { id } = req.params

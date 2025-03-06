@@ -3,17 +3,24 @@ const Receptionist = require('../models/receptionistModel')
 const generateToken = require('../utils/generateToken')
 
 const registerReceptionist = async(req, res) => {
-    const { username, email, phone, address, role, password, gender, receptionistDetails } = req.body
+    const { username, email, phone, address, role, age, password, gender, emergencyContact, receptionistDetails } = req.body
     try {
-        const receptionist = new User({username, email, phone, address, role, password, gender})
+        const receptionist = new User({username, email, phone, age, address, role, password, gender, emergencyContact})
         const existReceptionist = await User.findOne({email})
         if (existReceptionist) {
             return res.status(400).json({message: "Receptionist already existed"})
         }
         await receptionist.save()
 
-        const receptionistDetail = new Receptionist({userId: receptionist._id, receptionistDetails})
-        await receptionistDetail.save()
+        const receptionistDetail = new Receptionist({
+            userId: receptionist._id, 
+            receptionistDetails: {
+                employeeId: receptionistDetails?.employeeId || "",
+                yearsOfExperience: receptionistDetails?.yearsOfExperience || "",
+                workSchedule: receptionistDetails?.workSchedule || ""
+            }
+        });
+        await receptionistDetail.save();
         
         const token = generateToken(receptionist)
         res.status(201).json({message: "Receptionist created successfully", receptionist, token})
@@ -22,14 +29,26 @@ const registerReceptionist = async(req, res) => {
     } 
 }
 
-const getReceptionists = async(req, res) =>{
+const getReceptionists = async (req, res) => {
     try {
-        const receptionists = await User.find({role: "receptionist"}).populate("username email phone role")
-        res.status(200).json(receptionists)
+        const receptionists = await Receptionist.find().populate("userId", "username phone age");
+
+        if (!receptionists.length) return res.status(404).json({ message: "No receptionists found" });
+
+        res.status(200).json(receptionists.map(({ _id, userId, receptionistDetails }) => ({
+            _id,
+            username: userId?.username || "N/A",
+            phone: userId?.phone || "N/A",
+            age: userId?.age || "N/A",
+            workSchedule: receptionistDetails?.workSchedule || "N/A"
+        })));
     } catch (error) {
-        res.status(500).json({message: "Server error", error: error.message})
+        console.error("Error fetching receptionists:", error);
+        res.status(500).json({ message: "Server error", error: error.message });
     }
 };
+
+
 
 const getReceptionistById = async(req, res) => {
     const { id } = req.params

@@ -2,33 +2,60 @@ const Doctor = require('../models/doctorModel');
 const User = require('../models/userModel');
 const generateToken = require('../utils/generateToken');
 
-const registerDoctor = async(req, res) => {
-    const { username, email, phone, address, gender, age, password, role, doctorDetails} = req.body
+const registerDoctor = async (req, res) => {
+    const { username, email, phone, address, gender, age, password, doctorDetails } = req.body;
+    
     try {
-        const doctor = new User({username, email, phone, address , gender, age, password, role: 'doctor'})
-        const existDoctor = await User.findOne({email})
+        const existDoctor = await User.findOne({ email });
         if (existDoctor) {
-            return res.status(400).json({message: "Doctor already existed"})
+            return res.status(400).json({ message: "Doctor already exists" });
         }
-        await doctor.save()
-        const doctorDetail = new Doctor({userId: doctor._id, doctorDetails})
-        await doctorDetail.save()
 
-        const token = generateToken(doctor)
-        res.status(201).json({message: "Doctor created successfyly", doctor, token})
-    } catch (error) {
-        res.status(500).json({message: "Server error", error: error.message})
-    }
-}
+        // Create doctor user
+        const doctor = new User({
+            username, email, phone, address, gender, age, password, role: "doctor"
+        });
+        await doctor.save();
 
-const getAllDoctors = async(req, res) => {
-    try {
-        const doctors = await User.find({role: "doctor"}).populate("username email phone role")
-        res.status(200).json(doctors)
+        // Create doctor details
+        const doctorDetail = new Doctor({
+            userId: doctor._id,
+            doctorDetails: {
+                qualifications: doctorDetails.qualifications,
+                licenseNumber: doctorDetails.licenseNumber,
+                specialization: doctorDetails.specialization,
+                yearsOfExperience: doctorDetails.yearsOfExperience,
+                department: doctorDetails.department,
+                workSchedule: doctorDetails.workSchedule
+            }
+        });
+        await doctorDetail.save();
+
+        const token = generateToken(doctor);
+        res.status(201).json({ message: "Doctor created successfully", doctor, token });
     } catch (error) {
-        res.status(500).json({message: "Server error", error: error.message})
+        console.error("Error registering doctor:", error);
+        res.status(500).json({ message: "Server error", error: error.message });
     }
 };
+
+
+const getAllDoctors = async (req, res) => {
+    try {
+        const doctors = await Doctor.find()
+            .populate({
+                path: "userId",
+                select: "username phone"
+            })
+            .select("doctorDetails.specialization doctorDetails.workSchedule userId");
+
+        res.status(200).json(doctors);
+    } catch (error) {
+        console.error("Error fetching doctors:", error);
+        res.status(500).json({ message: "Server error", error: error.message });
+    }
+};
+
 
 const getDoctorById = async(req, res) => {
     const {id} = req.params
@@ -44,7 +71,7 @@ const getDoctorById = async(req, res) => {
     }
 };
 
-const updateDcotor = async(req, res) =>{
+const updateDoctor = async(req, res) =>{
     const {id} = req.params
     try {
         const doctor = await User.findByIdAndUpdate({_id: id}, req.body, {new: true})
@@ -76,6 +103,6 @@ module.exports = {
     registerDoctor,
     getAllDoctors,
     getDoctorById,
-    updateDcotor,
+    updateDoctor,
     deleteDoctor
 }

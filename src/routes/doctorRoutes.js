@@ -1,13 +1,13 @@
-const express = require('express')
-const { auth, roleMiddleware} = require('../middlewares/authMiddleware')
-const {registerDoctor, getAllDoctors, getDoctorById, updateDcotor, deleteDoctor} = require('../controllers/doctorController')
+const express = require('express');
+const { auth, roleMiddleware } = require('../middlewares/authMiddleware');
+const { registerDoctor, getAllDoctors, getDoctorById, updateDoctor, deleteDoctor } = require('../controllers/doctorController');
 
-const router = express.Router()
+const router = express.Router();
 
-router.post('/new-doctor', auth, registerDoctor, roleMiddleware('admin'))
-router.get('/doctors', auth, getAllDoctors, roleMiddleware('admin', 'receptionist'))
-router.get('/doctor/:id', auth, getDoctorById, roleMiddleware('admin', 'receptionist'))
-router.patch('/update-doctor/:id', auth, updateDcotor, roleMiddleware('admin'))
-router.delete('/delete-doctor/:id', auth, deleteDoctor, roleMiddleware('admin'))
+router.post('/new-doctor', auth, roleMiddleware('admin'), registerDoctor);
+router.get('/doctors', auth, roleMiddleware('admin', 'receptionist'), getAllDoctors);
+router.get('/doctor/:id', auth, roleMiddleware('admin', 'receptionist'), getDoctorById);
+router.patch('/update-doctor/:id', auth, roleMiddleware('admin'), updateDoctor); // Fixed spelling
+router.delete('/delete-doctor/:id', auth, roleMiddleware('admin'), deleteDoctor);
 
-module.exports = router
+module.exports = router;

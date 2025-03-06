@@ -1,12 +1,12 @@
-const express = require('express')
-const { auth, roleMiddleware } = require('../middlewares/authMiddleware')
-const {registerNurse, getNurses, getNurseById, updateNurse, deleteNurse} = require('../controllers/nurseController')
-const router = express.Router()
+const express = require('express');
+const { auth, roleMiddleware } = require('../middlewares/authMiddleware');
+const { registerNurse, getNurses, getNurseById, updateNurse, deleteNurse } = require('../controllers/nurseController');
+const router = express.Router();
 
-router.post('/new-nurse', auth, registerNurse, roleMiddleware('admin'))
-router.get('/nurses', auth, getNurses, roleMiddleware('admin', 'receptionist'))
-router.get('/nurse/:id', auth, getNurseById, roleMiddleware('admin', 'receptionist'))
-router.patch('/update-nurse/:id', auth, updateNurse, roleMiddleware('admin'))
-router.delete('/delete-nurse', auth, deleteNurse, roleMiddleware('admin'))
+router.post('/new-nurse', auth, roleMiddleware('admin'), registerNurse);
+router.get('/nurses', auth, roleMiddleware('admin', 'receptionist'), getNurses);
+router.get('/nurse/:id', auth, roleMiddleware('admin', 'receptionist'), getNurseById);
+router.patch('/update-nurse/:id', auth, roleMiddleware('admin'), updateNurse);
+router.delete('/delete-nurse', auth, roleMiddleware('admin'), deleteNurse);
 
-module.exports = router
+module.exports = router;
